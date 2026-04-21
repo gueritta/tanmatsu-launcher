@@ -156,8 +156,12 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
     ESP_RETURN_ON_ERROR(esp_lcd_new_panel_st7703(dbi_io, &panel_config, &st7703_panel), TAG,
                         "Failed to create ST7703 panel");
     ESP_RETURN_ON_ERROR(esp_lcd_panel_reset(st7703_panel), TAG, "Failed to reset ST7703 panel");
+    // panel_st7703_init sends the full init sequence (including Sleep Out 0x11 and
+    // Display On 0x29) in LP/command mode before starting the DPI video stream.
+    // Do NOT call esp_lcd_panel_disp_on_off after this point: the DSI bus is in
+    // HS video mode and the WHY2025 ST7703 does not accept any DBI transactions
+    // while the high-speed clock is running, causing an indefinite hang.
     ESP_RETURN_ON_ERROR(esp_lcd_panel_init(st7703_panel), TAG, "Failed to initialize ST7703 panel");
-    ESP_RETURN_ON_ERROR(esp_lcd_panel_disp_on_off(st7703_panel, true), TAG, "Failed to enable ST7703 panel output");
 
     ESP_LOGI(TAG, "ST7703 display ready");
     return ESP_OK;
