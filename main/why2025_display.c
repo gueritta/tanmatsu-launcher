@@ -77,6 +77,7 @@ static const panel_init_cmd_t why2025_init_cmds[] = {
     {0x11, NULL, 0, 250},
     {0x29, NULL, 0, 50},
 };
+#define WHY2025_INIT_CMDS_COUNT (sizeof(why2025_init_cmds) / sizeof(why2025_init_cmds[0]))
 
 static esp_err_t why2025_panel_send_init_sequence(esp_lcd_panel_io_handle_t dbi_io) {
     ESP_RETURN_ON_FALSE(dbi_io != NULL, ESP_ERR_INVALID_ARG, TAG, "Invalid DBI IO handle");
@@ -88,12 +89,14 @@ static esp_err_t why2025_panel_send_init_sequence(esp_lcd_panel_io_handle_t dbi_
     uint8_t colmod = 0x77;
     ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(dbi_io, LCD_CMD_COLMOD, &colmod, 1), TAG, "Failed to send COLMOD");
 
-    for (size_t i = 0; i < sizeof(why2025_init_cmds) / sizeof(why2025_init_cmds[0]); i++) {
+    for (size_t i = 0; i < WHY2025_INIT_CMDS_COUNT; i++) {
         ESP_RETURN_ON_ERROR(
             esp_lcd_panel_io_tx_param(dbi_io, why2025_init_cmds[i].cmd, why2025_init_cmds[i].data,
                                       why2025_init_cmds[i].data_bytes),
             TAG, "Failed to send panel init command");
-        vTaskDelay(pdMS_TO_TICKS(why2025_init_cmds[i].delay_ms));
+        if (why2025_init_cmds[i].delay_ms > 0) {
+            vTaskDelay(pdMS_TO_TICKS(why2025_init_cmds[i].delay_ms));
+        }
     }
 
     return ESP_OK;
