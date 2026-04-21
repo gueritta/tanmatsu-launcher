@@ -3,13 +3,13 @@
 #include "bsp/input.h"
 #include "common/display.h"
 #include "common/theme.h"
+#include "device_settings.h"
 #include "freertos/idf_additions.h"
 #include "gui_menu.h"
 #include "gui_style.h"
 #include "icons.h"
 #include "menu/message_dialog.h"
 #include "menu/textedit.h"
-#include "nvs_settings.h"
 #include "pax_gfx.h"
 #include "pax_matrix.h"
 #include "pax_types.h"
@@ -27,10 +27,10 @@ static void edit_nickname(menu_t* menu) {
     char         temp[129] = {0};
     bool         accepted  = false;
     memset(temp, 0, sizeof(temp));
-    nvs_settings_get_owner_nickname(temp, sizeof(temp), "John Doe");
+    device_settings_get_owner_nickname(temp, sizeof(temp));
     menu_textedit(buffer, theme, "Nickname", temp, sizeof(temp) + sizeof('\0'), true, &accepted);
     if (accepted) {
-        nvs_settings_set_owner_nickname(temp);
+        device_settings_set_owner_nickname(temp);
         menu_set_value(menu, 0, temp);
     }
 }
@@ -78,32 +78,32 @@ int month_to_days(int month) {
 
 static void edit_birthday_day(menu_t* menu, bool increase) {
     uint8_t day = 0;
-    nvs_settings_get_owner_birthday_day(&day, 1);
+    device_settings_get_owner_birthday_day(&day);
     uint8_t month = 0;
-    nvs_settings_get_owner_birthday_month(&month, 1);
+    device_settings_get_owner_birthday_month(&month);
     if (day > 1 && !increase) {
         day -= 1;
     } else if (day < month_to_days(month) && increase) {
         day += 1;
     }
-    nvs_settings_set_owner_birthday_day(day);
+    device_settings_set_owner_birthday_day(day);
 }
 
 static void edit_birthday_month(menu_t* menu, bool increase) {
     uint8_t month = 0;
-    nvs_settings_get_owner_birthday_month(&month, 1);
+    device_settings_get_owner_birthday_month(&month);
     if (month > 1 && !increase) {
         month -= 1;
     } else if (month < 12 && increase) {
         month += 1;
     }
-    nvs_settings_set_owner_birthday_month(month);
+    device_settings_set_owner_birthday_month(month);
 
     uint8_t day = 0;
-    nvs_settings_get_owner_birthday_day(&day, 1);
+    device_settings_get_owner_birthday_day(&day);
     if (day > month_to_days(month)) {
         day = month_to_days(month);
-        nvs_settings_set_owner_birthday_day(day);
+        device_settings_set_owner_birthday_day(day);
     }
 }
 
@@ -134,11 +134,11 @@ static void render(menu_t* menu, bool partial, bool icons) {
     }
 
     char nickname[64] = {0};
-    nvs_settings_get_owner_nickname(nickname, sizeof(nickname), "John Doe");
+    device_settings_get_owner_nickname(nickname, sizeof(nickname));
     uint8_t birthday_day = 1;
-    nvs_settings_get_owner_birthday_day(&birthday_day, 1);
+    device_settings_get_owner_birthday_day(&birthday_day);
     uint8_t birthday_month = 1;
-    nvs_settings_get_owner_birthday_month(&birthday_month, 1);
+    device_settings_get_owner_birthday_month(&birthday_month);
 
     size_t position_index = 0;
     char   value_buffer[16];
