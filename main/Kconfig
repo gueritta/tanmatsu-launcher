@@ -1,3 +1,16 @@
+menu "WHY2025 board support"
+
+    config BSP_TARGET_WHY2025
+        bool "Build for WHY2025 badge"
+        default n
+        help
+            Enable application-level support for the WHY2025 badge. This option is
+            defined here in the launcher so that WHY2025-specific code paths can be
+            compiled in while the badge-bsp hardware layer is selected separately via
+            CONFIG_BSP_TARGET_ESP32_P4_FUNCTION_EV_BOARD.
+
+endmenu
+
 menu "Fast FATFS I/O"
 
     config FATFS_USE_FASTOPEN
