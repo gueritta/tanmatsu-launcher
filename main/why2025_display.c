@@ -165,9 +165,9 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
             .pin_bit_mask = 1ULL << config->reset_pin,
         };
         ESP_RETURN_ON_ERROR(gpio_config(&io_conf), TAG, "Failed to configure display reset pin");
-        gpio_set_level(config->reset_pin, 0);
-        vTaskDelay(pdMS_TO_TICKS(5));
         gpio_set_level(config->reset_pin, 1);
+        vTaskDelay(pdMS_TO_TICKS(5));
+        gpio_set_level(config->reset_pin, 0);
         vTaskDelay(pdMS_TO_TICKS(10));
         gpio_set_level(config->reset_pin, 1);
         vTaskDelay(pdMS_TO_TICKS(120));
