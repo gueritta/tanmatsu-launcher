@@ -87,7 +87,7 @@ esp_err_t ek79007_get_parameters(size_t *h_res, size_t *v_res, lcd_color_rgb_pix
 }
 
 esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
-    ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, TAG, "Invalid display configuration");
+    ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, TAG, "Display configuration is NULL");
     ESP_LOGI(TAG, "Initializing WHY2025 ST7703 display (%dx%d)", WHY2025_LCD_H_RES, WHY2025_LCD_V_RES);
 
     esp_lcd_dsi_bus_handle_t dsi_bus;
