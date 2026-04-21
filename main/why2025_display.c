@@ -21,6 +21,15 @@ static const char *TAG = "WHY2025_display";
 #define WHY2025_DSI_LANE_NUM        2
 #define WHY2025_DSI_LANE_MBPS       1000
 
+// WHY2025 DSI M.2 connector → ESP32-P4 dedicated hardware pin mapping
+// (these are fixed peripheral pins, not configurable GPIOs)
+//   M.2 pin 27  DSI.DATA0-  →  ESP32-P4 pin 40  (DSI_DATAN0)
+//   M.2 pin 29  DSI.DATA0+  →  ESP32-P4 pin 39  (DSI_DATAP0)
+//   M.2 pin 33  DSI.CLK+    →  ESP32-P4 pin 38  (DSI_CLKP)
+//   M.2 pin 35  DSI.CLK-    →  ESP32-P4 pin 37  (DSI_CLKN)
+//   M.2 pin 39  DSI.DATA1-  →  ESP32-P4 pin 36  (DSI_DATAN1)
+//   M.2 pin 41  DSI.DATA1+  →  ESP32-P4 pin 35  (DSI_DATAP1)
+
 // WHY2025-specific GPIO assignments (override EV board BSP defaults)
 #define WHY2025_LCD_RESET_PIN       16  // M.2 pin 42: Core to DSI Reset
 // WHY2025_LCD_BACKLIGHT_PIN is documented here for reference; the EV board BSP
