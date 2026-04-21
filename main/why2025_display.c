@@ -35,9 +35,9 @@ typedef struct {
     const void *data;
     size_t data_bytes;
     unsigned int delay_ms;
-} why2025_lcd_init_cmd_t;
+} panel_init_cmd_t;
 
-static const why2025_lcd_init_cmd_t why2025_init_cmds[] = {
+static const panel_init_cmd_t why2025_init_cmds[] = {
     {0xB9, (uint8_t[]){0xF1, 0x12, 0x83}, 3, 0},
     {0xBA, (uint8_t[]){0x31, 0x81, 0x05, 0xF9, 0x0E, 0x0E, 0x20, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00, 0x44, 0x25, 0x00, 0x90, 0x0A, 0x00,
@@ -169,7 +169,7 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
         vTaskDelay(pdMS_TO_TICKS(5));
         gpio_set_level(config->reset_pin, 1);
         vTaskDelay(pdMS_TO_TICKS(10));
-        gpio_set_level(config->reset_pin, 0);
+        gpio_set_level(config->reset_pin, 1);
         vTaskDelay(pdMS_TO_TICKS(120));
     }
 
