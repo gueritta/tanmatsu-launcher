@@ -161,6 +161,8 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
         .rgb_ele_order  = LCD_RGB_ELEMENT_ORDER_BGR,
         .bits_per_pixel = 24,
         .vendor_config  = &vendor_config,
+        // ST7703 RSTB is active-low; drive GPIO low to assert reset
+        .flags.reset_active_high = 0,
     };
 
     ESP_LOGI(TAG, "--> Attempting create");
