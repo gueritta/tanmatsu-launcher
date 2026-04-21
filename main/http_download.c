@@ -9,7 +9,6 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
-#include "nvs_settings.h"
 
 static const char* TAG = "HTTP download";
 
@@ -111,10 +110,7 @@ static bool _download_file(const char* url, const char* path) {
     info.fd                   = fd;
 
     char user_agent[128] = {0};
-    nvs_settings_get_http_user_agent(user_agent, sizeof(user_agent), "");
-    if (strlen(user_agent) < 1) {
-        device_settings_get_default_http_user_agent(user_agent, sizeof(user_agent));
-    }
+    device_settings_get_http_user_agent(user_agent, sizeof(user_agent));
 
     esp_http_client_config_t config = {.url                 = url,
                                        .use_global_ca_store = true,
@@ -148,10 +144,7 @@ static bool _download_ram(const char* url, uint8_t** ptr, size_t* size) {
     info.buffer               = ptr;
 
     char user_agent[128] = {0};
-    nvs_settings_get_http_user_agent(user_agent, sizeof(user_agent), "");
-    if (strlen(user_agent) < 1) {
-        device_settings_get_default_http_user_agent(user_agent, sizeof(user_agent));
-    }
+    device_settings_get_http_user_agent(user_agent, sizeof(user_agent));
 
     esp_http_client_config_t config  = {.url                 = url,
                                         .use_global_ca_store = true,
