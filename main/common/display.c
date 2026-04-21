@@ -3,6 +3,7 @@
 #include "esp_err.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/idf_additions.h"
 #include "hal/lcd_types.h"
@@ -36,12 +37,19 @@ extern uint8_t*   asp_disp_fb;
 extern pax_buf_t* asp_disp_pax_buf;
 #endif
 
+static const char TAG_DISPLAY[] = "display";
+
 esp_err_t display_init(void) {
     esp_err_t res =
         bsp_display_get_parameters(&display_h_res, &display_v_res, &display_color_format, &display_data_endian);
     if (res != ESP_OK) {
+        ESP_LOGE(TAG_DISPLAY, "bsp_display_get_parameters failed: %s (0x%x)", esp_err_to_name(res), res);
         return res;
     }
+
+    ESP_LOGI(TAG_DISPLAY, "Display parameters: %ux%u, color_format=%d, data_endian=%d",
+             (unsigned)display_h_res, (unsigned)display_v_res, (int)display_color_format,
+             (int)display_data_endian);
 
     pax_buf_type_t format = PAX_BUF_24_888RGB;
 
@@ -62,6 +70,14 @@ esp_err_t display_init(void) {
 
     pax_buf_init(&fb, NULL, display_h_res, display_v_res, format);
     pax_buf_reversed(&fb, display_data_endian == LCD_RGB_DATA_ENDIAN_BIG);
+
+    if (pax_buf_get_pixels(&fb) == NULL) {
+        ESP_LOGE(TAG_DISPLAY, "PAX framebuffer allocation failed (size: %ux%u format:%d)",
+                 (unsigned)display_h_res, (unsigned)display_v_res, (int)format);
+        return ESP_ERR_NO_MEM;
+    }
+    ESP_LOGI(TAG_DISPLAY, "PAX framebuffer allocated at %p (%ux%u)", pax_buf_get_pixels(&fb),
+             (unsigned)display_h_res, (unsigned)display_v_res);
 
 #if defined(CONFIG_BSP_TARGET_KAMI)
     fb.palette      = palette;
@@ -92,6 +108,8 @@ esp_err_t display_init(void) {
     asp_disp_pax_buf = &fb;
 #endif
 
+    ESP_LOGI(TAG_DISPLAY, "Display initialized: %ux%u (visual), rotation=%d",
+             (unsigned)pax_buf_get_width(&fb), (unsigned)pax_buf_get_height(&fb), (int)display_rotation);
     return ESP_OK;
 }
 
@@ -102,6 +120,12 @@ pax_buf_t* display_get_buffer(void) {
 void display_blit_buffer(pax_buf_t* fb) {
     size_t display_h_res = 0, display_v_res = 0;
     ESP_ERROR_CHECK(bsp_display_get_parameters(&display_h_res, &display_v_res, NULL, NULL));
+    static bool first_blit = true;
+    if (first_blit) {
+        ESP_LOGI(TAG_DISPLAY, "First display blit: %ux%u pixels at %p", (unsigned)display_h_res,
+                 (unsigned)display_v_res, pax_buf_get_pixels(fb));
+        first_blit = false;
+    }
     ESP_ERROR_CHECK(bsp_display_blit(0, 0, display_h_res, display_v_res, pax_buf_get_pixels(fb)));
 }
 

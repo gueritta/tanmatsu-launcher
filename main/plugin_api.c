@@ -772,10 +772,12 @@ void plugin_api_init(void) {
 
     if (led_claims == NULL) {
         bsp_led_get_count(&led_claim_count);
-        led_claims = calloc(led_claim_count, sizeof(led_claim_t));
-        if (led_claims == NULL) {
-            ESP_LOGE(TAG, "Failed to allocate LED claim array");
-            led_claim_count = 0;
+        if (led_claim_count > 0) {
+            led_claims = calloc(led_claim_count, sizeof(led_claim_t));
+            if (led_claims == NULL) {
+                ESP_LOGE(TAG, "Failed to allocate LED claim array");
+                led_claim_count = 0;
+            }
         }
     }
 }

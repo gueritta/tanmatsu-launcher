@@ -337,6 +337,9 @@ void app_main(void) {
     }
 
     display_available = display_init() == ESP_OK;
+    if (!display_available) {
+        ESP_LOGE(TAG, "Display initialization failed, running without display");
+    }
 
     if (bsp_device_get_initialized_without_coprocessor()) {
         startup_dialog("Device started without coprocessor!");
@@ -390,6 +393,15 @@ void app_main(void) {
     if (bsp_init_result != ESP_OK || bsp_device_get_initialized_without_coprocessor()) {
         startup_dialog("Error: Failed to initialize coprocessor");
         return;
+    }
+
+    // Re-apply display brightness now that the coprocessor is confirmed ready.
+    // The initial brightness call during BSP init may have been issued before
+    // the coprocessor finished booting; this ensures the backlight is on.
+    {
+        uint8_t display_brightness = 100;
+        device_settings_get_display_brightness(&display_brightness);
+        bsp_display_set_backlight_brightness(display_brightness);
     }
 
     bool radio_recovery_requested = false;
