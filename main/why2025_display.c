@@ -35,9 +35,9 @@ typedef struct {
     const void *data;
     size_t data_bytes;
     unsigned int delay_ms;
-} panel_init_cmd_t;
+} why2025_panel_init_cmd_t;
 
-static const panel_init_cmd_t why2025_init_cmds[] = {
+static const why2025_panel_init_cmd_t why2025_init_cmds[] = {
     {0xB9, (uint8_t[]){0xF1, 0x12, 0x83}, 3, 0},
     {0xBA, (uint8_t[]){0x31, 0x81, 0x05, 0xF9, 0x0E, 0x0E, 0x20, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00, 0x44, 0x25, 0x00, 0x90, 0x0A, 0x00,
@@ -90,10 +90,13 @@ static esp_err_t why2025_panel_send_init_sequence(esp_lcd_panel_io_handle_t dbi_
     ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(dbi_io, LCD_CMD_COLMOD, &colmod, 1), TAG, "Failed to send COLMOD");
 
     for (size_t i = 0; i < WHY2025_INIT_CMDS_COUNT; i++) {
-        ESP_RETURN_ON_ERROR(
-            esp_lcd_panel_io_tx_param(dbi_io, why2025_init_cmds[i].cmd, why2025_init_cmds[i].data,
-                                      why2025_init_cmds[i].data_bytes),
-            TAG, "Failed to send panel init command");
+        esp_err_t ret = esp_lcd_panel_io_tx_param(dbi_io, why2025_init_cmds[i].cmd, why2025_init_cmds[i].data,
+                                                  why2025_init_cmds[i].data_bytes);
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to send panel init cmd index=%u cmd=0x%02X: %s", (unsigned int)i,
+                     why2025_init_cmds[i].cmd, esp_err_to_name(ret));
+            return ret;
+        }
         if (why2025_init_cmds[i].delay_ms > 0) {
             vTaskDelay(pdMS_TO_TICKS(why2025_init_cmds[i].delay_ms));
         }
