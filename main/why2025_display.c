@@ -25,6 +25,9 @@ static const char *TAG = "WHY2025_display";
 #define WHY2025_LCD_V_RES           720
 #define WHY2025_DPI_CLK_MHZ         58
 
+// GPIO connected to the display reset line via M.2 Pin 42
+#define WHY2025_LCD_RESET_PIN       23
+
 static esp_lcd_panel_handle_t st7703_panel = NULL;
 
 // Panel-specific initialisation sequence for the WHY2025 ST7703 display.
@@ -88,8 +91,6 @@ esp_err_t ek79007_get_parameters(size_t *h_res, size_t *v_res, lcd_color_rgb_pix
 
 esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
     ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, TAG, "Display configuration is NULL");
-    ESP_RETURN_ON_FALSE(config->reset_pin == GPIO_NUM_NC || GPIO_IS_VALID_OUTPUT_GPIO(config->reset_pin),
-                        ESP_ERR_INVALID_ARG, TAG, "Invalid reset GPIO");
     ESP_LOGI(TAG, "Initializing WHY2025 ST7703 display (%dx%d)", WHY2025_LCD_H_RES, WHY2025_LCD_V_RES);
 
     esp_lcd_dsi_bus_handle_t dsi_bus;
@@ -146,10 +147,11 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
     };
 
     esp_lcd_panel_dev_config_t panel_config = {
-        .reset_gpio_num = config->reset_pin,
+        .reset_gpio_num = WHY2025_LCD_RESET_PIN,
         // The WHY2025 badge displays RGB data in BGR order
         .rgb_ele_order  = LCD_RGB_ELEMENT_ORDER_BGR,
         .bits_per_pixel = 24,
+        .flags          = {.reset_active_high = 1},
         .vendor_config  = &vendor_config,
     };
 
