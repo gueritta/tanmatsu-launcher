@@ -163,10 +163,14 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
         .vendor_config  = &vendor_config,
     };
 
+    ESP_LOGI(TAG, "--> Attempting create");
     ESP_RETURN_ON_ERROR(esp_lcd_new_panel_st7703(dbi_io, &panel_config, &st7703_panel), TAG,
                         "Failed to create ST7703 panel");
+    ESP_LOGI(TAG, "--> Attempting reset");
     ESP_RETURN_ON_ERROR(esp_lcd_panel_reset(st7703_panel), TAG, "Failed to reset ST7703 panel");
+    ESP_LOGI(TAG, "--> Attempting init");
     ESP_RETURN_ON_ERROR(esp_lcd_panel_init(st7703_panel), TAG, "Failed to initialize ST7703 panel");
+    ESP_LOGI(TAG, "--> Attempting display on");
     ESP_RETURN_ON_ERROR(esp_lcd_panel_disp_on_off(st7703_panel, true), TAG, "Failed to enable ST7703 panel output");
 
     ESP_LOGI(TAG, "ST7703 display ready");
