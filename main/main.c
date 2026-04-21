@@ -399,7 +399,7 @@ void app_main(void) {
     // The initial brightness call during BSP init may have been issued before
     // the coprocessor finished booting; this ensures the backlight is on.
     {
-        uint8_t display_brightness = 100;
+        uint8_t display_brightness = 0;
         device_settings_get_display_brightness(&display_brightness);
         bsp_display_set_backlight_brightness(display_brightness);
     }
