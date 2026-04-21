@@ -26,6 +26,8 @@ static const char *TAG = "WHY2025_display";
 #define WHY2025_LCD_H_RES           720
 #define WHY2025_LCD_V_RES           720
 #define WHY2025_DPI_CLK_MHZ         58
+#define WHY2025_MADCTL_BGR          LCD_CMD_BGR_BIT
+#define WHY2025_COLMOD_24BPP        0x77
 
 static esp_lcd_panel_handle_t st7703_panel = NULL;
 
@@ -82,11 +84,11 @@ static const why2025_panel_init_cmd_t why2025_init_cmds[] = {
 static esp_err_t why2025_panel_send_init_sequence(esp_lcd_panel_io_handle_t dbi_io) {
     ESP_RETURN_ON_FALSE(dbi_io != NULL, ESP_ERR_INVALID_ARG, TAG, "Invalid DBI IO handle");
 
-    // Configure RGB/BGR order and 24-bit color mode before vendor sequence.
-    uint8_t madctl = LCD_CMD_BGR_BIT;
+    // Configure BGR pixel order and 24-bit color mode before the vendor sequence.
+    uint8_t madctl = WHY2025_MADCTL_BGR;
     ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(dbi_io, LCD_CMD_MADCTL, &madctl, 1), TAG, "Failed to send MADCTL");
 
-    uint8_t colmod = 0x77;
+    uint8_t colmod = WHY2025_COLMOD_24BPP;
     ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(dbi_io, LCD_CMD_COLMOD, &colmod, 1), TAG, "Failed to send COLMOD");
 
     for (size_t i = 0; i < WHY2025_INIT_CMDS_COUNT; i++) {
