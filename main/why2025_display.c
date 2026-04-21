@@ -25,12 +25,6 @@ static const char *TAG = "WHY2025_display";
 #define WHY2025_LCD_V_RES           720
 #define WHY2025_DPI_CLK_MHZ         58
 
-// GPIO used for the LCD hardware reset. The WHY2025 badge does not expose a
-// dedicated LCD reset line accessible from software (GPIO 17 is shared with
-// the SDIO peripheral), so we leave the reset unconnected and rely on the
-// panel's power-on reset instead.
-#define WHY2025_LCD_RST_GPIO        GPIO_NUM_NC
-
 static esp_lcd_panel_handle_t st7703_panel = NULL;
 
 // Panel-specific initialisation sequence for the WHY2025 ST7703 display.
@@ -93,6 +87,9 @@ esp_err_t ek79007_get_parameters(size_t *h_res, size_t *v_res, lcd_color_rgb_pix
 }
 
 esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
+    ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, TAG, "Display configuration is NULL");
+    ESP_RETURN_ON_FALSE(config->reset_pin == GPIO_NUM_NC || GPIO_IS_VALID_OUTPUT_GPIO(config->reset_pin),
+                        ESP_ERR_INVALID_ARG, TAG, "Invalid reset GPIO");
     ESP_LOGI(TAG, "Initializing WHY2025 ST7703 display (%dx%d)", WHY2025_LCD_H_RES, WHY2025_LCD_V_RES);
 
     esp_lcd_dsi_bus_handle_t dsi_bus;
@@ -149,7 +146,7 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
     };
 
     esp_lcd_panel_dev_config_t panel_config = {
-        .reset_gpio_num = WHY2025_LCD_RST_GPIO,
+        .reset_gpio_num = config->reset_pin,
         // The WHY2025 badge displays RGB data in BGR order
         .rgb_ele_order  = LCD_RGB_ELEMENT_ORDER_BGR,
         .bits_per_pixel = 24,
@@ -160,6 +157,7 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
                         "Failed to create ST7703 panel");
     ESP_RETURN_ON_ERROR(esp_lcd_panel_reset(st7703_panel), TAG, "Failed to reset ST7703 panel");
     ESP_RETURN_ON_ERROR(esp_lcd_panel_init(st7703_panel), TAG, "Failed to initialize ST7703 panel");
+    ESP_RETURN_ON_ERROR(esp_lcd_panel_disp_on_off(st7703_panel, true), TAG, "Failed to enable ST7703 panel output");
 
     ESP_LOGI(TAG, "ST7703 display ready");
     return ESP_OK;
