@@ -133,8 +133,14 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
     };
 
     st7703_vendor_config_t vendor_config = {
-        .init_cmds      = why2025_init_cmds,
-        .init_cmds_size = sizeof(why2025_init_cmds) / sizeof(why2025_init_cmds[0]),
+        .init_cmds           = why2025_init_cmds,
+        .init_cmds_size      = sizeof(why2025_init_cmds) / sizeof(why2025_init_cmds[0]),
+        // Send the panel init commands (including Sleep Out and Display On) while
+        // the MIPI DPI video stream is still off.  Without this flag the driver
+        // starts the DPI stream first and then attempts a blocking panel ID read
+        // via DBI; the ST7703 on the WHY2025 does not respond to reads while the
+        // HS video clock is already running, causing the initialisation to hang.
+        .init_in_command_mode = true,
         .mipi_config =
             {
                 .dsi_bus    = dsi_bus,
