@@ -14,7 +14,7 @@
 #include "esp_log.h"
 #include "hal/lcd_types.h"
 
-static const char *TAG = "WHY2025 display";
+static const char *TAG = "WHY2025_display";
 
 // DSI bus configuration
 #define WHY2025_DSI_LANE_NUM        2
