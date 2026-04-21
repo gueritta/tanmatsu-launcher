@@ -23,6 +23,8 @@ static const char *TAG = "WHY2025_display";
 
 // WHY2025-specific GPIO assignments (override EV board BSP defaults)
 #define WHY2025_LCD_RESET_PIN       16  // M.2 pin 42: Core to DSI Reset
+// WHY2025_LCD_BACKLIGHT_PIN is documented here for reference; the EV board BSP
+// stub handles backlight control and must be updated separately to use this pin.
 #define WHY2025_LCD_BACKLIGHT_PIN   17  // M.2 pin 44: Core to Backlight PWM
 
 // Display timing for the WHY2025 720x720 ST7703 panel
