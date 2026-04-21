@@ -33,6 +33,6 @@ dependencies:
     rules:
       - if: target == esp32p4
   espressif/esp_lcd_st7703:
-    version: "^1.0.3"
+    version: "^1.0.5"
     rules:
       - if: target == esp32p4

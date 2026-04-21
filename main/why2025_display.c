@@ -96,7 +96,7 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
     esp_lcd_dsi_bus_config_t bus_config = {
         .bus_id             = 0,
         .num_data_lanes     = WHY2025_DSI_LANE_NUM,
-        .phy_clk_src        = MIPI_DSI_PHY_CLK_SRC_DEFAULT,
+        .phy_clk_src        = 0,
         .lane_bit_rate_mbps = WHY2025_DSI_LANE_MBPS,
     };
     ESP_RETURN_ON_ERROR(esp_lcd_new_dsi_bus(&bus_config, &dsi_bus), TAG, "Failed to create DSI bus");
