@@ -26,7 +26,9 @@ static void callback(char const* status_text, uint8_t percentage) {
         return;  // No change, no need to update
     }
     last_percentage = percentage;
-    progress_dialog(get_icon(ICON_SYSTEM_UPDATE), "Coprocessor update", status_text, percentage, false);
+    char text[128];
+    sprintf(text, "%s (%u%%)", status_text, percentage);
+    busy_dialog(get_icon(ICON_SYSTEM_UPDATE), "Coprocessor update", text, false);
 }
 
 void coprocessor_flash(bool force) {

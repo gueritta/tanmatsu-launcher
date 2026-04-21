@@ -1,18 +1,21 @@
-#include "menu_brightness.h"
 #include <stdbool.h>
 #include "bsp/input.h"
+#include "bsp/orientation.h"
 #include "bsp/power.h"
 #include "common/display.h"
 #include "common/theme.h"
 #include "device_settings.h"
+#include "freertos/idf_additions.h"
 #include "gui_menu.h"
 #include "gui_style.h"
 #include "icons.h"
 #include "menu/message_dialog.h"
-#include "nvs_settings.h"
+#include "menu_hardware_test.h"
 #include "pax_gfx.h"
 #include "pax_matrix.h"
 #include "pax_types.h"
+#include "test_keyboard.h"
+#include "test_keyboard_stuck_keys.h"
 
 typedef enum {
     SETTING_NONE,
@@ -44,13 +47,13 @@ static void render(menu_t* menu, bool partial, bool icons) {
     }
 
     uint8_t display_brightness = 100;
-    nvs_settings_get_display_brightness(&display_brightness, DEFAULT_DISPLAY_BRIGHTNESS);
+    device_settings_get_display_brightness(&display_brightness);
 
     uint8_t keyboard_brightness = 0;
-    nvs_settings_get_keyboard_brightness(&keyboard_brightness, DEFAULT_KEYBOARD_BRIGHTNESS);
+    device_settings_get_keyboard_brightness(&keyboard_brightness);
 
     uint8_t led_brightness = 100;
-    nvs_settings_get_led_brightness(&led_brightness, DEFAULT_LED_BRIGHTNESS);
+    device_settings_get_led_brightness(&led_brightness);
 
     size_t position_index = 0;
     char   value_buffer[16];
@@ -69,7 +72,7 @@ void increase_setting(menu_setting_t setting) {
     uint8_t value = 0;
     switch (setting) {
         case SETTING_DISPLAY_BACKLIGHT_BRIGHTNESS:
-            nvs_settings_get_display_brightness(&value, DEFAULT_DISPLAY_BRIGHTNESS);
+            device_settings_get_display_brightness(&value);
             if (value < 100) {
                 if (value >= 5) {
                     value += 5;
@@ -79,11 +82,11 @@ void increase_setting(menu_setting_t setting) {
                 if (value > 100) {
                     value = 100;
                 }
-                nvs_settings_set_display_brightness(value);
+                device_settings_set_display_brightness(value);
             }
             break;
         case SETTING_KEYBOARD_BACKLIGHT_BRIGHTNESS:
-            nvs_settings_get_keyboard_brightness(&value, DEFAULT_KEYBOARD_BRIGHTNESS);
+            device_settings_get_keyboard_brightness(&value);
             if (value < 100) {
                 if (value >= 5) {
                     value += 5;
@@ -93,11 +96,11 @@ void increase_setting(menu_setting_t setting) {
                 if (value > 100) {
                     value = 100;
                 }
-                nvs_settings_set_keyboard_brightness(value);
+                device_settings_set_keyboard_brightness(value);
             }
             break;
         case SETTING_LED_BRIGHTNESS:
-            nvs_settings_get_led_brightness(&value, DEFAULT_LED_BRIGHTNESS);
+            device_settings_get_led_brightness(&value);
             if (value < 100) {
                 if (value >= 5) {
                     value += 5;
@@ -107,7 +110,7 @@ void increase_setting(menu_setting_t setting) {
                 if (value > 100) {
                     value = 100;
                 }
-                nvs_settings_set_led_brightness(value);
+                device_settings_set_led_brightness(value);
             }
             break;
         default:
@@ -120,36 +123,36 @@ void decrease_setting(menu_setting_t setting) {
     uint8_t value = 0;
     switch (setting) {
         case SETTING_DISPLAY_BACKLIGHT_BRIGHTNESS:
-            nvs_settings_get_display_brightness(&value, DEFAULT_DISPLAY_BRIGHTNESS);
+            device_settings_get_display_brightness(&value);
             if (value > 0) {
                 if (value > 5) {
                     value -= 5;
                 } else {
                     value -= 1;
                 }
-                nvs_settings_set_display_brightness(value);
+                device_settings_set_display_brightness(value);
             }
             break;
         case SETTING_KEYBOARD_BACKLIGHT_BRIGHTNESS:
-            nvs_settings_get_keyboard_brightness(&value, DEFAULT_KEYBOARD_BRIGHTNESS);
+            device_settings_get_keyboard_brightness(&value);
             if (value > 0) {
                 if (value > 5) {
                     value -= 5;
                 } else {
                     value -= 1;
                 }
-                nvs_settings_set_keyboard_brightness(value);
+                device_settings_set_keyboard_brightness(value);
             }
             break;
         case SETTING_LED_BRIGHTNESS:
-            nvs_settings_get_led_brightness(&value, DEFAULT_LED_BRIGHTNESS);
+            device_settings_get_led_brightness(&value);
             if (value > 0) {
                 if (value > 5) {
                     value -= 5;
                 } else {
                     value -= 1;
                 }
-                nvs_settings_set_led_brightness(value);
+                device_settings_set_led_brightness(value);
             }
             break;
         default:

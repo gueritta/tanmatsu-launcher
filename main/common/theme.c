@@ -1,7 +1,6 @@
 #include "chakrapetchmedium.h"
+#include "device_settings.h"
 #include "gui_style.h"
-#include "nvs_settings.h"
-#include "nvs_settings_helpers.h"
 #include "pax_gfx.h"
 #include "rajdhani.h"
 #include "sdkconfig.h"
@@ -20,7 +19,7 @@ void theme_initialize(void) {
     };
 
     theme_setting_t theme_setting = THEME_BLACK;
-    nvs_settings_get_theme(&theme_setting);
+    device_settings_get_theme(&theme_setting);
 
     if (theme_setting == THEME_WHITE) {
         palette.color_foreground          = 0xFFFFFFFF;  // #FFFFFF
@@ -142,7 +141,6 @@ void theme_initialize(void) {
     theme.progressbar.horizontal_margin  = 5;
     theme.progressbar.vertical_padding   = 5;
     theme.progressbar.horizontal_padding = 5;
-    theme.progressbar.height             = 32;
     theme.chat.height                    = 480 - 64;
     theme.chat.vertical_margin           = 20;
     theme.chat.horizontal_margin         = 30;
