@@ -181,6 +181,7 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
 
     ESP_LOGI(TAG, "--> Attempting display on");
     ESP_RETURN_ON_ERROR(esp_lcd_panel_disp_on_off(st7703_panel, true), TAG, "Failed to enable ST7703 panel output");
+    ESP_LOGI(TAG, "<-- Display on complete");
 
     ESP_LOGI(TAG, "ST7703 display ready");
     return ESP_OK;
