@@ -116,7 +116,6 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
         .virtual_channel = 0,
         .lcd_cmd_bits    = 8,
         .lcd_param_bits  = 8,
-        .disable_cmd_bta = true,
     };
     ESP_RETURN_ON_ERROR(esp_lcd_new_panel_io_dbi(dsi_bus, &dbi_config, &dbi_io), TAG, "Failed to create DBI IO");
 
