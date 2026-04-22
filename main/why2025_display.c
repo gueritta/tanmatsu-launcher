@@ -13,6 +13,7 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "hal/gpio_types.h"
 #include "hal/lcd_types.h"
 #include "driver/gpio.h"
 
@@ -21,6 +22,12 @@ static const char *TAG = "WHY2025_display";
 // DSI bus configuration
 #define WHY2025_DSI_LANE_NUM        2
 #define WHY2025_DSI_LANE_MBPS       1000
+
+// WHY2025-specific GPIO assignments (override EV board BSP defaults)
+#define WHY2025_LCD_RESET_PIN       16  // M.2 pin 42: Core to DSI Reset
+// WHY2025_LCD_BACKLIGHT_PIN is documented here for reference; the EV board BSP
+// stub handles backlight control and must be updated separately to use this pin.
+#define WHY2025_LCD_BACKLIGHT_PIN   17  // M.2 pin 44: Core to Backlight PWM
 
 // Display timing for the WHY2025 720x720 ST7703 panel
 #define WHY2025_LCD_H_RES           720
@@ -126,15 +133,18 @@ esp_err_t ek79007_get_parameters(size_t *h_res, size_t *v_res, lcd_color_rgb_pix
 
 esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
     ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, TAG, "Display configuration is NULL");
-    ESP_RETURN_ON_FALSE(config->reset_pin == GPIO_NUM_NC || GPIO_IS_VALID_OUTPUT_GPIO(config->reset_pin),
+    // Use the WHY2025 reset pin (GPIO16) regardless of what the EV board BSP passes in,
+    // since the BSP hardcodes its own pin number (GPIO7) which is wrong for WHY2025.
+    gpio_num_t reset_pin = WHY2025_LCD_RESET_PIN;
+    ESP_RETURN_ON_FALSE(reset_pin == GPIO_NUM_NC || GPIO_IS_VALID_OUTPUT_GPIO(reset_pin),
                         ESP_ERR_INVALID_ARG, TAG, "Invalid reset GPIO");
-    ESP_LOGI(TAG, "Initializing WHY2025 ST7703 display (%dx%d)", WHY2025_LCD_H_RES, WHY2025_LCD_V_RES);
+    ESP_LOGI(TAG, "Initializing WHY2025 ST7703 display (%dx%d), reset GPIO%d", WHY2025_LCD_H_RES, WHY2025_LCD_V_RES, reset_pin);
 
     esp_lcd_dsi_bus_handle_t dsi_bus;
     esp_lcd_dsi_bus_config_t bus_config = {
         .bus_id             = 0,
         .num_data_lanes     = WHY2025_DSI_LANE_NUM,
-        .phy_clk_src        = MIPI_DSI_PHY_CLK_SRC_DEFAULT,
+        .phy_clk_src        = 0,
         .lane_bit_rate_mbps = WHY2025_DSI_LANE_MBPS,
     };
     ESP_RETURN_ON_ERROR(esp_lcd_new_dsi_bus(&bus_config, &dsi_bus), TAG, "Failed to create DSI bus");
@@ -167,17 +177,17 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
         .flags.use_dma2d = true,
     };
 
-    if (config->reset_pin != GPIO_NUM_NC) {
+    if (reset_pin != GPIO_NUM_NC) {
         gpio_config_t io_conf = {
             .mode = GPIO_MODE_OUTPUT,
-            .pin_bit_mask = 1ULL << config->reset_pin,
+            .pin_bit_mask = 1ULL << reset_pin,
         };
         ESP_RETURN_ON_ERROR(gpio_config(&io_conf), TAG, "Failed to configure display reset pin");
-        gpio_set_level(config->reset_pin, 1);
+        gpio_set_level(reset_pin, 1);
         vTaskDelay(pdMS_TO_TICKS(5));
-        gpio_set_level(config->reset_pin, 0);
+        gpio_set_level(reset_pin, 0);
         vTaskDelay(pdMS_TO_TICKS(10));
-        gpio_set_level(config->reset_pin, 1);
+        gpio_set_level(reset_pin, 1);
         vTaskDelay(pdMS_TO_TICKS(120));
     }
 
