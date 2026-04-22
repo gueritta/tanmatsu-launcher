@@ -33,6 +33,7 @@ static const char *TAG = "WHY2025_display";
 #define WHY2025_LCD_H_RES           720
 #define WHY2025_LCD_V_RES           720
 #define WHY2025_DPI_CLK_MHZ         58
+// MIPI DCS command codes used by esp_lcd_panel_io_tx_param.
 #define WHY2025_DCS_CMD_MADCTL      0x36
 #define WHY2025_DCS_CMD_COLMOD      0x3A
 #define WHY2025_MADCTL_BGR_BIT      0x08
