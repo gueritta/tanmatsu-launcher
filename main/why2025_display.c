@@ -8,7 +8,6 @@
 #include "dsi_panel_espressif_ek79007.h"
 #include "esp_check.h"
 #include "esp_lcd_mipi_dsi.h"
-#include "esp_lcd_panel_commands.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_log.h"
