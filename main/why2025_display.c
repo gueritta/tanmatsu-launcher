@@ -10,10 +10,12 @@
 #include "esp_lcd_mipi_dsi.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
-#include "esp_lcd_st7703.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "hal/gpio_types.h"
 #include "hal/lcd_types.h"
+#include "driver/gpio.h"
 
 static const char *TAG = "WHY2025_display";
 
@@ -31,11 +33,20 @@ static const char *TAG = "WHY2025_display";
 #define WHY2025_LCD_H_RES           720
 #define WHY2025_LCD_V_RES           720
 #define WHY2025_DPI_CLK_MHZ         58
+#define WHY2025_MADCTL_BGR          LCD_CMD_BGR_BIT
+#define WHY2025_COLMOD_24BPP        0x77
 
 static esp_lcd_panel_handle_t st7703_panel = NULL;
 
 // Panel-specific initialisation sequence for the WHY2025 ST7703 display.
-static const st7703_lcd_init_cmd_t why2025_init_cmds[] = {
+typedef struct {
+    int cmd;
+    const void *data;
+    size_t data_bytes;
+    unsigned int delay_ms;
+} why2025_panel_init_cmd_t;
+
+static const why2025_panel_init_cmd_t why2025_init_cmds[] = {
     {0xB9, (uint8_t[]){0xF1, 0x12, 0x83}, 3, 0},
     {0xBA, (uint8_t[]){0x31, 0x81, 0x05, 0xF9, 0x0E, 0x0E, 0x20, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00, 0x44, 0x25, 0x00, 0x90, 0x0A, 0x00,
@@ -75,6 +86,33 @@ static const st7703_lcd_init_cmd_t why2025_init_cmds[] = {
     {0x11, NULL, 0, 250},
     {0x29, NULL, 0, 50},
 };
+#define WHY2025_INIT_CMDS_COUNT (sizeof(why2025_init_cmds) / sizeof(why2025_init_cmds[0]))
+
+static esp_err_t why2025_panel_send_init_sequence(esp_lcd_panel_io_handle_t dbi_io) {
+    ESP_RETURN_ON_FALSE(dbi_io != NULL, ESP_ERR_INVALID_ARG, TAG, "Invalid DBI IO handle");
+
+    // Configure BGR pixel order and 24-bit color mode before the vendor sequence.
+    uint8_t madctl = WHY2025_MADCTL_BGR;
+    ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(dbi_io, LCD_CMD_MADCTL, &madctl, 1), TAG, "Failed to send MADCTL");
+
+    uint8_t colmod = WHY2025_COLMOD_24BPP;
+    ESP_RETURN_ON_ERROR(esp_lcd_panel_io_tx_param(dbi_io, LCD_CMD_COLMOD, &colmod, 1), TAG, "Failed to send COLMOD");
+
+    for (size_t i = 0; i < WHY2025_INIT_CMDS_COUNT; i++) {
+        esp_err_t ret = esp_lcd_panel_io_tx_param(dbi_io, why2025_init_cmds[i].cmd, why2025_init_cmds[i].data,
+                                                  why2025_init_cmds[i].data_bytes);
+        if (ret != ESP_OK) {
+            ESP_LOGE(TAG, "Failed to send panel init cmd index=%u cmd=0x%02X: %s", (unsigned int)i,
+                     why2025_init_cmds[i].cmd, esp_err_to_name(ret));
+            return ret;
+        }
+        if (why2025_init_cmds[i].delay_ms > 0) {
+            vTaskDelay(pdMS_TO_TICKS(why2025_init_cmds[i].delay_ms));
+        }
+    }
+
+    return ESP_OK;
+}
 
 esp_lcd_panel_handle_t ek79007_get_panel(void) {
     return st7703_panel;
@@ -139,49 +177,23 @@ esp_err_t ek79007_initialize(const ek79007_configuration_t *config) {
         .flags.use_dma2d = true,
     };
 
-    st7703_vendor_config_t vendor_config = {
-        .init_cmds           = why2025_init_cmds,
-        .init_cmds_size      = sizeof(why2025_init_cmds) / sizeof(why2025_init_cmds[0]),
-        // Send the panel init commands (including Sleep Out and Display On) while
-        // the MIPI DPI video stream is still off.  Without this flag the driver
-        // starts the DPI stream first and then attempts a blocking panel ID read
-        // via DBI; the ST7703 on the WHY2025 does not respond to reads while the
-        // HS video clock is already running, causing the initialisation to hang.
-        .init_in_command_mode = true,
-        .mipi_config =
-            {
-                .dsi_bus    = dsi_bus,
-                .dpi_config = &dpi_config,
-            },
-    };
+    if (reset_pin != GPIO_NUM_NC) {
+        gpio_config_t io_conf = {
+            .mode = GPIO_MODE_OUTPUT,
+            .pin_bit_mask = 1ULL << reset_pin,
+        };
+        ESP_RETURN_ON_ERROR(gpio_config(&io_conf), TAG, "Failed to configure display reset pin");
+        gpio_set_level(reset_pin, 1);
+        vTaskDelay(pdMS_TO_TICKS(5));
+        gpio_set_level(reset_pin, 0);
+        vTaskDelay(pdMS_TO_TICKS(10));
+        gpio_set_level(reset_pin, 1);
+        vTaskDelay(pdMS_TO_TICKS(120));
+    }
 
-    esp_lcd_panel_dev_config_t panel_config = {
-        .reset_gpio_num = reset_pin,
-        // The WHY2025 badge displays RGB data in BGR order
-        .rgb_ele_order  = LCD_RGB_ELEMENT_ORDER_BGR,
-        .bits_per_pixel = 24,
-        .vendor_config  = &vendor_config,
-        .flags.reset_active_high = 1,
-    };
-
-    ESP_LOGI(TAG, "--> Attempting create");
-    ESP_RETURN_ON_ERROR(esp_lcd_new_panel_st7703(dbi_io, &panel_config, &st7703_panel), TAG,
-                        "Failed to create ST7703 panel");
-    ESP_LOGI(TAG, "<-- Create complete");
-
-    ESP_LOGI(TAG, "--> Attempting reset");
-    ESP_RETURN_ON_ERROR(esp_lcd_panel_reset(st7703_panel), TAG, "Failed to reset ST7703 panel");
-    // Give the ST7703 hardware time to wake up from hardware reset
-    vTaskDelay(pdMS_TO_TICKS(250));
-    ESP_LOGI(TAG, "<-- Reset complete");
-
-    ESP_LOGI(TAG, "--> Attempting init");
-    ESP_RETURN_ON_ERROR(esp_lcd_panel_init(st7703_panel), TAG, "Failed to initialize ST7703 panel");
-    ESP_LOGI(TAG, "<-- Init complete");
-
-    ESP_LOGI(TAG, "--> Attempting display on");
-    ESP_RETURN_ON_ERROR(esp_lcd_panel_disp_on_off(st7703_panel, true), TAG, "Failed to enable ST7703 panel output");
-    ESP_LOGI(TAG, "<-- Display on complete");
+    ESP_RETURN_ON_ERROR(why2025_panel_send_init_sequence(dbi_io), TAG, "Failed to initialize ST7703 command sequence");
+    ESP_RETURN_ON_ERROR(esp_lcd_new_panel_dpi(dsi_bus, &dpi_config, &st7703_panel), TAG, "Failed to create DPI panel");
+    ESP_RETURN_ON_ERROR(esp_lcd_panel_init(st7703_panel), TAG, "Failed to initialize DPI panel");
 
     ESP_LOGI(TAG, "ST7703 display ready");
     return ESP_OK;
