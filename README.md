@@ -10,6 +10,7 @@ This application supports the following boards:
  - MCH2022 badge
  - Kami e-paper badge
  - ESP32-P4 function EV board
+ - WHY2025 badge
 
 ## License
 

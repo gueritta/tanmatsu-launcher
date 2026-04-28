@@ -3,7 +3,6 @@
 #include "device_settings.h"
 #include "esp_err.h"
 #include "lora.h"
-#include "nvs_settings.h"
 
 esp_err_t lora_apply_settings(void) {
     lora_protocol_config_params_t config = {
@@ -23,12 +22,12 @@ esp_err_t lora_apply_settings(void) {
     uint32_t frequency = 0;
     device_settings_get_lora_frequency(&frequency);
     config.frequency = frequency;
-    nvs_settings_get_lora_spreading_factor(&config.spreading_factor);
+    device_settings_get_lora_spreading_factor(&config.spreading_factor);
     uint16_t bandwidth = 0;
-    nvs_settings_get_lora_bandwidth(&bandwidth);
+    device_settings_get_lora_bandwidth(&bandwidth);
     config.bandwidth = bandwidth;
-    nvs_settings_get_lora_coding_rate(&config.coding_rate);
-    nvs_settings_get_lora_power(&config.power);
+    device_settings_get_lora_coding_rate(&config.coding_rate);
+    device_settings_get_lora_power(&config.power);
 
     return lora_set_config(&config);
 }

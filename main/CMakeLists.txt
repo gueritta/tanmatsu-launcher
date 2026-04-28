@@ -18,6 +18,11 @@ list(APPEND extra_sources
 )
 endif()
 
+if(CONFIG_BSP_TARGET_WHY2025)
+list(APPEND extra_requires esp_lcd_st7703)
+list(APPEND extra_sources "why2025_display.c")
+endif()
+
 idf_component_register(
 	SRCS
 		# Application
@@ -122,7 +127,6 @@ idf_component_register(
 		eeprom
 		tanmatsu-addon
 		tanmatsu-lora
-		tanmatsu-settings
 		${extra_requires}
 	INCLUDE_DIRS
 		"."

@@ -12,7 +12,6 @@
 #include "icons.h"
 #include "menu/message_dialog.h"
 #include "menu_repository_client_project.h"
-#include "nvs_settings.h"
 #include "pax_codecs.h"
 #include "pax_text.h"
 #include "pax_types.h"
@@ -131,7 +130,7 @@ void menu_repository_client(pax_buf_t* buffer, gui_theme_t* theme) {
     busy_dialog(get_icon(ICON_STOREFRONT), "Repository", "Downloading list of projects...", true);
 
     char server[128] = {0};
-    nvs_settings_get_repo_server(server, sizeof(server), DEFAULT_REPO_SERVER);
+    device_settings_get_repo_server(server, sizeof(server));
     bool success = load_projects(server, &projects, NULL);
     if (!success) {
         ESP_LOGE(TAG, "Failed to load projects");
