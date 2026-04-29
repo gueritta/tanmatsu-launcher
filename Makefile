@@ -26,6 +26,8 @@ else ifeq ($(DEVICE), konsool)
 IDF_TARGET ?= esp32p4
 else ifeq ($(DEVICE), esp32-p4-function-ev-board)
 IDF_TARGET ?= esp32p4
+else ifeq ($(DEVICE), why2025)
+IDF_TARGET ?= esp32p4
 else ifeq ($(DEVICE), mch2022)
 IDF_TARGET ?= esp32
 else ifeq ($(DEVICE), kami)
@@ -108,16 +110,6 @@ fullclean: clean
 checkbuildenv:
 	if [ -z "$(IDF_PATH)" ]; then echo "IDF_PATH is not set!"; exit 1; fi
 	if [ -z "$(IDF_TOOLS_PATH)" ]; then echo "IDF_TOOLS_PATH is not set!"; exit 1; fi
-	# Check if the IDF commit id the one we need
-	#if [ -d "$(IDF_PATH)" ]; then \
-	#	if [ "$(IDF_COMMIT)" != "$(shell cd $(IDF_PATH); git rev-parse HEAD)" ]; then \
-	#		echo "ESP-IDF commit id does not match! Expected '$(IDF_COMMIT)' got '$(shell git rev-parse HEAD)'"; \
-	#		echo "Run $ make refreshsdk"; \
-	#		echo "To update the ESP-IDF to the correct commit id"; \
-	#		echo "Or set the IDF_COMMIT variable in the Makefile to the correct commit id"; \
-	#		exit 1; \
-	#	fi; \
-	#fi
 
 # Building
 
@@ -235,6 +227,7 @@ buildall:
 	$(MAKE) build DEVICE=kami
 	$(MAKE) build DEVICE=mch2022
 	$(MAKE) build DEVICE=esp32-p4-function-ev-board
+	$(MAKE) build DEVICE=why2025
 
 # Vscode
 .PHONY: vscode
