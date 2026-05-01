@@ -1,6 +1,8 @@
 dependencies:
   idf: ">=5.5.1"
-  badgeteam/badge-bsp: "^0.9.1"
+  badgeteam/badge-bsp:
+    git: https://github.com/gueritta/esp32-component-badge-bsp.git
+    version: "why2025"
   robotman2412/pax-gfx: "^2.0.7"
   robotman2412/pax-codecs: "^1.0.1"
   badgeteam/appfs: "^1.0.2"

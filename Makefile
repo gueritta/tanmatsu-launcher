@@ -26,6 +26,8 @@ else ifeq ($(DEVICE), konsool)
 IDF_TARGET ?= esp32p4
 else ifeq ($(DEVICE), esp32-p4-function-ev-board)
 IDF_TARGET ?= esp32p4
+else ifeq ($(DEVICE), why2025)
+IDF_TARGET ?= esp32p4
 else ifeq ($(DEVICE), mch2022)
 IDF_TARGET ?= esp32
 else ifeq ($(DEVICE), kami)
@@ -235,6 +237,7 @@ buildall:
 	$(MAKE) build DEVICE=kami
 	$(MAKE) build DEVICE=mch2022
 	$(MAKE) build DEVICE=esp32-p4-function-ev-board
+	$(MAKE) build DEVICE=why2025
 
 # Vscode
 .PHONY: vscode
