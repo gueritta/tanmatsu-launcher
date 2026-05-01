@@ -514,10 +514,10 @@ esp_err_t tanmatsu_coprocessor_power_off(tanmatsu_coprocessor_handle_t handle, b
 
 esp_err_t tanmatsu_coprocessor_get_backup_registers(tanmatsu_coprocessor_handle_t handle, uint8_t reg,
                                                     uint8_t* out_value, uint8_t length) {
-    ESP_RETURN_ON_FALSE(reg >= TANMATSU_COPROCESSOR_BACKUP_NUM_REGS, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
-    ESP_RETURN_ON_FALSE(length >= TANMATSU_COPROCESSOR_BACKUP_NUM_REGS - reg, ESP_ERR_INVALID_ARG, TAG,
+    ESP_RETURN_ON_FALSE(reg < TANMATSU_COPROCESSOR_BACKUP_NUM_REGS, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
+    ESP_RETURN_ON_FALSE(length <= TANMATSU_COPROCESSOR_BACKUP_NUM_REGS - reg, ESP_ERR_INVALID_ARG, TAG,
                         "invalid argument");
-    ESP_RETURN_ON_FALSE(length < 1, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
+    ESP_RETURN_ON_FALSE(length > 0, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
     ESP_RETURN_ON_ERROR(ts_i2c_master_transmit_receive(handle, handle->dev_handle,
                                                        (uint8_t[]){TANMATSU_COPROCESSOR_I2C_REG_BACKUP_0 + reg}, 1,
                                                        out_value, length, TANMATSU_COPROCESSOR_TIMEOUT_MS),
@@ -527,10 +527,10 @@ esp_err_t tanmatsu_coprocessor_get_backup_registers(tanmatsu_coprocessor_handle_
 
 esp_err_t tanmatsu_coprocessor_set_backup_registers(tanmatsu_coprocessor_handle_t handle, uint8_t reg,
                                                     const uint8_t* value, uint8_t length) {
-    ESP_RETURN_ON_FALSE(reg >= TANMATSU_COPROCESSOR_BACKUP_NUM_REGS, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
-    ESP_RETURN_ON_FALSE(length >= TANMATSU_COPROCESSOR_BACKUP_NUM_REGS - reg, ESP_ERR_INVALID_ARG, TAG,
+    ESP_RETURN_ON_FALSE(reg < TANMATSU_COPROCESSOR_BACKUP_NUM_REGS, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
+    ESP_RETURN_ON_FALSE(length <= TANMATSU_COPROCESSOR_BACKUP_NUM_REGS - reg, ESP_ERR_INVALID_ARG, TAG,
                         "invalid argument");
-    ESP_RETURN_ON_FALSE(length < 1, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
+    ESP_RETURN_ON_FALSE(length > 0, ESP_ERR_INVALID_ARG, TAG, "invalid argument");
     uint8_t buffer[TANMATSU_COPROCESSOR_BACKUP_NUM_REGS] = {TANMATSU_COPROCESSOR_I2C_REG_BACKUP_0 + reg};
     memcpy(&buffer[1], value, length);
     ESP_RETURN_ON_ERROR(
@@ -690,7 +690,6 @@ esp_err_t tanmatsu_coprocessor_set_pmic_charging_control(tanmatsu_coprocessor_ha
         value |= (1 << 0);
     }
     value |= ((speed & 3) << 1);
-    printf("CURRENT: %u\r\n", speed);
     ESP_RETURN_ON_ERROR(ts_i2c_master_transmit(handle, handle->dev_handle,
                                                (uint8_t[]){
                                                    TANMATSU_COPROCESSOR_I2C_REG_PMIC_CHARGING_CONTROL,
