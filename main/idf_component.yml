@@ -15,11 +15,6 @@ dependencies:
   nicolaielectronics/tanmatsu-lora: "^0.1.1"
   nicolaielectronics/tanmatsu-addon: "^0.0.1"
   nicolaielectronics/tanmatsu-settings: "^1.0.0"
-  nicolaielectronics/tanmatsu_coprocessor:
-    git: https://github.com/Nicolai-Electronics/esp32-component-tanmatsu-coprocessor.git
-    version: "v0.7.0"
-    rules:
-      - if: target == esp32p4
   nicolaielectronics/rvswd:
     version: "^0.2.1"
     rules:
