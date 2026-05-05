@@ -258,14 +258,16 @@ esp_err_t check_i2c_bus(void) {
         esp_err_t ret_coprocessor = i2c_master_probe(i2c_bus_handle_internal, 0x5F, 50);
         if (ret_coprocessor != ESP_OK) {
             ESP_LOGE(TAG, "Coprocessor not found on I2C bus");
-            pax_buf_t* buffer = display_get_buffer();
-            pax_background(buffer, 0xFFFF0000);
-            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 0, "The internal I2C bus is not working!");
-            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 1,
-                          "Please remove add-on board, modifications and other plugged in");
-            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 2,
-                          "devices and wires and power cycle the device.");
-            display_blit_buffer(buffer);
+            if (display_available) {
+                pax_buf_t* buffer = display_get_buffer();
+                pax_background(buffer, 0xFFFF0000);
+                pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 0, "The internal I2C bus is not working!");
+                pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 1,
+                              "Please remove add-on board, modifications and other plugged in");
+                pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 2,
+                              "devices and wires and power cycle the device.");
+                display_blit_buffer(buffer);
+            }
 
             vTaskDelay(pdMS_TO_TICKS(10000));
 
@@ -273,37 +275,43 @@ esp_err_t check_i2c_bus(void) {
             coprocessor_flash(true);
             return ESP_FAIL;
         } else {
+            if (display_available) {
+                pax_buf_t* buffer = display_get_buffer();
+                pax_background(buffer, 0xFFFF0000);
+                pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 0,
+                              "Audio codec and orientation sensor do not respond");
+                pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 1,
+                              "This could indicate a hardware issue.");
+                pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 2,
+                              "Please power cycle the device, if that does not");
+                pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 3, "help please contact support.");
+                display_blit_buffer(buffer);
+            }
+            vTaskDelay(pdMS_TO_TICKS(3000));
+        }
+    } else if (ret_codec != ESP_OK) {
+        if (display_available) {
             pax_buf_t* buffer = display_get_buffer();
             pax_background(buffer, 0xFFFF0000);
-            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 0,
-                          "Audio codec and orientation sensor do not respond");
-            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 1,
-                          "This could indicate a hardware issue.");
+            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 0, "Audio codec does not respond");
+            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 1, "This could indicate a hardware issue.");
             pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 2,
                           "Please power cycle the device, if that does not");
             pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 3, "help please contact support.");
             display_blit_buffer(buffer);
-            vTaskDelay(pdMS_TO_TICKS(3000));
         }
-    } else if (ret_codec != ESP_OK) {
-        pax_buf_t* buffer = display_get_buffer();
-        pax_background(buffer, 0xFFFF0000);
-        pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 0, "Audio codec does not respond");
-        pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 1, "This could indicate a hardware issue.");
-        pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 2,
-                      "Please power cycle the device, if that does not");
-        pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 3, "help please contact support.");
-        display_blit_buffer(buffer);
         vTaskDelay(pdMS_TO_TICKS(3000));
     } else if (ret_bmi270 != ESP_OK) {
-        pax_buf_t* buffer = display_get_buffer();
-        pax_background(buffer, 0xFFFF0000);
-        pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 0, "Orientation sensor does not respond");
-        pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 1, "This could indicate a hardware issue.");
-        pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 2,
-                      "Please power cycle the device, if that does not");
-        pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 3, "help please contact support.");
-        display_blit_buffer(buffer);
+        if (display_available) {
+            pax_buf_t* buffer = display_get_buffer();
+            pax_background(buffer, 0xFFFF0000);
+            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 0, "Orientation sensor does not respond");
+            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 1, "This could indicate a hardware issue.");
+            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 2,
+                          "Please power cycle the device, if that does not");
+            pax_draw_text(buffer, 0xFFFFFFFF, pax_font_sky_mono, 16, 0, 18 * 3, "help please contact support.");
+            display_blit_buffer(buffer);
+        }
         vTaskDelay(pdMS_TO_TICKS(3000));
     }
 #endif
